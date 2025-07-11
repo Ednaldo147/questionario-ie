@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário de Inteligência Emocional</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .option-button {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .option-button.selected {
+            border-color: #667eea;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        .categoria-neurociencia { border-left: 4px solid #3b82f6; }
+        .categoria-psicologia   { border-left: 4px solid #ec4899; }
+        .categoria-metafisica   { border-left: 4px solid #8b5cf6; }
+        .resultado-card {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-4xl font-bold text-white mb-4" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">
+                <i class="fas fa-brain text-blue-300 mr-3"></i>
+                Teste de I.E.
+            </h1>
+            <p class="text-xl text-white opacity-90">Descubra seu nível atual de IE através das três perspectivas</p>
+        </div>
+
+        <!-- Formulário Inicial -->
+        <div id="form-inicial" class="card p-8 max-w-md mx-auto mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Vamos começar!</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">Nome completo *</label>
+                    <input type="text" id="nome" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu nome" required>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail (opcional)</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu e-mail">
+                </div>
+                <button onclick="iniciarQuestionario()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition duration-300">
+                    <i class="fas fa-play mr-2"></i>
+                    Iniciar Questionário
+                </button>
+            </div>
+        </div>
+
+        <!-- Questionário (único) -->
+        <div id="questionario" class="hidden"></div>
+
+        <!-- Resultado (único) -->
+        <div id="resultado" class="hidden"></div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="card p-8 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p class="text-gray-700">Processando suas respostas...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts JavaScript -->
+    <script>
+let perguntas = [];
+let opcoes_resposta = [];
+let respostas = [];
+let perguntaAtual = 0;
+let dadosUsuario = {};
+const API_BASE_URL = window.location.origin + '/api';
+
+async function iniciarQuestionario() {
+    const nome = document.getElementById('nome').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    if (!nome) {
+        alert("Por favor, preencha seu nome.");
+        return;
+    }
+
+    dadosUsuario = { nome, email };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/perguntas`);
+        const data = await response.json();
+
+        perguntas = data.perguntas;
+        opcoes_resposta = data.opcoes_resposta;
+        respostas = new Array(perguntas.length).fill(null);
+
+        document.getElementById('form-inicial').classList.add('hidden');
+        document.getElementById('questionario').classList.remove('hidden');
+
+        renderizarPergunta();
+    } catch (error) {
+        console.error("Erro ao carregar perguntas:", error);
+        alert("Erro ao carregar perguntas. Tente novamente.");
+    }
+}
+
+function renderizarPergunta() {
+    const container = document.getElementById('questionario');
+    container.innerHTML = '';
+
+    const pergunta = perguntas[perguntaAtual];
+
+    const perguntaEl = document.createElement('h2');
+    perguntaEl.className = "text-xl font-bold mb-6 text-gray-800";
+    perguntaEl.textContent = `${perguntaAtual + 1}. ${pergunta.pergunta}`;
+    container.appendChild(perguntaEl);
+
+    const opcoesDiv = document.createElement('div');
+    opcoesDiv.className = "grid grid-cols-1 gap-4";
+
+    opcoes_resposta.forEach((opcao) => {
+        const btn = document.createElement('button');
+        btn.textContent = `${opcao.valor}. ${opcao.texto}`;
+        btn.className = "option-button w-full py-4 px-6 text-lg font-medium rounded-lg border-2 shadow-sm transition-all duration-300";
+        btn.style.backgroundColor = "#fff";
+        btn.style.borderColor = "#ddd";
+        btn.style.color = "#333";
+
+        if (respostas[perguntaAtual] === opcao.valor) {
+            btn.classList.add('selected');
+            btn.style.background = "linear-gradient(45deg, #667eea, #764ba2)";
+            btn.style.color = "#fff";
+            btn.style.borderColor = "#667eea";
+        }
+
+        btn.onmouseover = () => {
+            btn.style.boxShadow = "0 4px 10px rgba(0,0,0,0.15)";
+            btn.style.transform = "translateY(-2px)";
+        };
+        btn.onmouseout = () => {
+            btn.style.boxShadow = "";
+            btn.style.transform = "";
+        };
+
+        btn.onclick = () => {
+            respostas[perguntaAtual] = opcao.valor;
+            renderizarPergunta();
+        };
+
+        opcoesDiv.appendChild(btn);
+    });
+
+    container.appendChild(opcoesDiv);
+
+    const nav = document.createElement('div');
+    nav.className = "flex justify-between mt-8";
+
+    if (perguntaAtual > 0) {
+        const btnVoltar = document.createElement('button');
+        btnVoltar.textContent = "← Voltar";
+        btnVoltar.className = "bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition";
+        btnVoltar.onclick = () => {
+            perguntaAtual--;
+            renderizarPergunta();
+        };
+        nav.appendChild(btnVoltar);
+    }
+
+    const btnAvancar = document.createElement('button');
+    btnAvancar.textContent = (perguntaAtual === perguntas.length - 1) ? "Finalizar →" : "Próxima →";
+    btnAvancar.className = "bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition";
+    btnAvancar.onclick = () => {
+        if (respostas[perguntaAtual] === null) {
+            alert("Por favor, selecione uma resposta.");
+            return;
+        }
+        if (perguntaAtual === perguntas.length - 1) {
+            finalizarQuestionario();
+        } else {
+            perguntaAtual++;
+            renderizarPergunta();
+        }
+    };
+
+    nav.appendChild(btnAvancar);
+    container.appendChild(nav);
+}
+
+async function finalizarQuestionario() {
+    if (respostas.includes(null)) {
+        alert('Por favor, responda todas as perguntas antes de finalizar.');
+        return;
+    }
+
+    document.getElementById('loading').classList.remove('hidden');
+
+    try {
+        const canvas = document.getElementById('graficoCategorias');
+        dadosUsuario.grafico_base64 = canvas ? canvas.toDataURL('image/png') : '';
+
+        const response = await fetch(`${API_BASE_URL}/submeter`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nome: dadosUsuario.nome,
+                email: dadosUsuario.email,
+                respostas: respostas,
+                grafico_base64: dadosUsuario.grafico_base64
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.sucesso) {
+            exibirResultado(data.relatorio);
+        } else {
+            throw new Error(data.erro || 'Erro ao processar respostas');
+        }
+    } catch (error) {
+        console.error('Erro ao submeter questionário:', error);
+        alert('Erro ao processar suas respostas. Tente novamente.');
+    } finally {
+        document.getElementById('loading').classList.add('hidden');
+    }
+}
+
+function exibirResultado(relatorio) {
+    document.getElementById('questionario').classList.add('hidden');
+    document.getElementById('resultado').classList.remove('hidden');
+    // Aqui você pode customizar a exibição do relatório como quiser
+}
+
+function reiniciarQuestionario() {
+    respostas = new Array(perguntas.length).fill(null);
+    perguntaAtual = 0;
+    dadosUsuario = {};
+    document.getElementById('nome').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('resultado').classList.add('hidden');
+    document.getElementById('form-inicial').classList.remove('hidden');
+}
+    </script>  
+</body>
+</html>
