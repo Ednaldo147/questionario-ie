@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário de Inteligência Emocional</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .option-button {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .option-button.selected {
+            border-color: #667eea;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        .categoria-neurociencia { border-left: 4px solid #3b82f6; }
+        .categoria-psicologia { border-left: 4px solid #ec4899; }
+        .categoria-metafisica { border-left: 4px solid #8b5cf6; }
+        
+        .resultado-card {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center                <h1 class="text-4xl font-bold text-white mb-4" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">
+                    <i class="fas fa-brain text-blue-300 mr-3"></i>
+                    Teste de I.E.
+                </h1>     <p class="text-xl text-white opacity-90">Descubra seu nível atual de IE através das três perspectivas</p>
+        </div>
+
+        <!-- Formulário Inicial -->
+        <div id="form-inicial" class="card p-8 max-w-md mx-auto mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Vamos começar!</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">Nome completo *</label>
+                    <input type="text" id="nome" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu nome" required>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail (opcional)</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu e-mail">
+                </div>
+                <button onclick="iniciarQuestionario()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition duration-300">
+                    <i class="fas fa-play mr-2"></i>
+                    Iniciar Questionário
+                </button>
+            </div>
+        </div>
+
+        <!-- Questionário -->
+        <div id="questionario" class="hidden">
+            <!-- Barra de Progresso -->
+            <div class="card p-6 mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Progresso</span>
+                    <span id="progresso-texto" class="text-sm font-medium text-gray-700">1 de 15</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="barra-progresso" class="progress-bar bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full" style="width: 6.67%"></div>
+                </div>
+            </div>
+
+            <!-- Pergunta Atual -->
+            <div id="pergunta-container" class="card p-8 mb-6">
+                <div id="categoria-badge" class="inline-block px-3 py-1 rounded-full text-sm font-medium mb-4"></div>
+                <h3 id="pergunta-texto" class="text-xl font-semibold text-gray-800 mb-6"></h3>
+                
+                <div id="opcoes-container" class="space-y-3">
+                    <!-- Opções serão inseridas dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Botões de Navegação -->
+            <div class="flex justify-between">
+                <button id="btn-anterior" onclick="perguntaAnterior()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Anterior
+                </button>
+                <button id="btn-proximo" onclick="proximaPergunta()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Próxima
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                <button id="btn-finalizar" onclick="finalizarQuestionario()" class="hidden px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition duration-300">
+                    <i class="fas fa-check mr-2"></i>
+                    Finalizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Resultado -->
+        <div id="resultado" class="hidden">
+            <div class="resultado-card card p-8 max-w-4xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-trophy text-yellow-500 mr-3"></i>
+                        Seu Resultado
+                    </h2>
+                    <div id="nivel-badge" class="inline-block px-6 py-3 rounded-full text-xl font-bold text-white mb-4"></div>
+                    <p id="descricao-nivel" class="text-lg text-gray-700 max-w-2xl mx-auto"></p>
+                </div>
+
+                <!-- Pontuações -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+                            <i class="fas fa-star text-3xl mb-2"></i>
+                            <div id="pontuacao-total" class="text-2xl font-bold">0</div>
+                            <div class="text-sm opacity-90">Pontuação Total</div>
+                            <div id="percentual-total" class="text-sm opacity-75">0%</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-blue-400 to-blue-500 text-white p-6 rounded-lg">
+                            <i class="fas fa-brain text-3xl mb-2"></i>
+                            <div id="pontuacao-neurociencia" class="text-2xl font-bold">0</div>
+                            <div class="text-sm opacity-90">Neurociência</div>
+                            <div id="percentual-neurociencia" class="text-sm opacity-75">0%</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-6 rounded-lg">
+                            <i class="fas fa-heart text-3xl mb-2"></i>
+                            <div id="pontuacao-psicologia" class="text-2xl font-bold">0</div>
+                            <div class="text-sm opacity-90">Psicologia</div>
+                            <div id="percentual-psicologia" class="text-sm opacity-75">0%</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+                            <i class="fas fa-infinity text-3xl mb-2"></i>
+                            <div id="pontuacao-metafisica" class="text-2xl font-bold">0</div>
+                            <div class="text-sm opacity-90">Metafísica</div>
+                            <div id="percentual-metafisica" class="text-sm opacity-75">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análise -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
+                        <h4 class="text-lg font-semibold text-green-800 mb-2">
+                            <i class="fas fa-thumbs-up mr-2"></i>
+                            Área Mais Forte
+                        </h4>
+                        <p id="area-forte" class="text-green-700"></p>
+                    </div>
+                    <div class="bg-orange-50 p-6 rounded-lg border-l-4 border-orange-500">
+                        <h4 class="text-lg font-semibold text-orange-800 mb-2">
+                            <i class="fas fa-target mr-2"></i>
+                            Área para Desenvolver
+                        </h4>
+                        <p id="area-fraca" class="text-orange-700"></p>
+                    </div>
+                </div>
+
+                <!-- Sugestões -->
+                <div class="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500 mb-8">
+                    <h4 class="text-lg font-semibold text-blue-800 mb-4">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        Sugestões Personalizadas
+                    </h4>
+                    <ul id="sugestoes-lista" class="space-y-2 text-blue-700">
+                        <!-- Sugestões serão inseridas dinamicamente -->
+                    </ul>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="text-center space-x-4">
+                    <button onclick="reiniciarQuestionario()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300">
+                        <i class="fas fa-redo mr-2"></i>
+                        Fazer Novamente
+                    </button>
+                    <button onclick="compartilharResultado()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-300">
+                        <i class="fas fa-share mr-2"></i>
+                        Compartilhar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="card p-8 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p class="text-gray-700">Processando suas respostas...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let perguntas = [];
+        let opcoesResposta = [];
+        let respostas = [];
+        let perguntaAtual = 0;
+        let dadosUsuario = {};
+
+        // Configuração da API
+        const API_BASE_URL = window.location.origin + '/api';
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarPerguntas();
+        });
+
+        async function carregarPerguntas() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/perguntas`);
+                const data = await response.json();
+                perguntas = data.perguntas;
+                opcoesResposta = data.opcoes_resposta;
+                respostas = new Array(perguntas.length).fill(null);
+            } catch (error) {
+                console.error('Erro ao carregar perguntas:', error);
+                alert('Erro ao carregar o questionário. Tente novamente.');
+            }
+        }
+
+        function iniciarQuestionario() {
+            const nome = document.getElementById('nome').value.trim();
+            if (!nome) {
+                alert('Por favor, digite seu nome para continuar.');
+                return;
+            }
+
+            dadosUsuario = {
+                nome: nome,
+                email: document.getElementById('email').value.trim()
+            };
+
+            document.getElementById('form-inicial').classList.add('hidden');
+            document.getElementById('questionario').classList.remove('hidden');
+            
+            perguntaAtual = 0;
+            exibirPergunta();
+        }
+
+        function exibirPergunta() {
+            const pergunta = perguntas[perguntaAtual];
+            
+            // Atualizar progresso
+            const progresso = ((perguntaAtual + 1) / perguntas.length) * 100;
+            document.getElementById('barra-progresso').style.width = progresso + '%';
+            document.getElementById('progresso-texto').textContent = `${perguntaAtual + 1} de ${perguntas.length}`;
+
+            // Atualizar categoria
+            const categoriaBadge = document.getElementById('categoria-badge');
+            const categoriaInfo = {
+                'neurociencia': { texto: 'Neurociência', classe: 'bg-blue-100 text-blue-800' },
+                'psicologia': { texto: 'Psicologia', classe: 'bg-pink-100 text-pink-800' },
+                'metafisica': { texto: 'Metafísica', classe: 'bg-purple-100 text-purple-800' }
+            };
+            
+            const info = categoriaInfo[pergunta.categoria];
+            categoriaBadge.textContent = info.texto;
+            categoriaBadge.className = `inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${info.classe}`;
+
+            // Atualizar pergunta
+            document.getElementById('pergunta-texto').textContent = pergunta.pergunta;
+
+            // Atualizar opções
+            const opcoesContainer = document.getElementById('opcoes-container');
+            opcoesContainer.innerHTML = '';
+
+            opcoesResposta.forEach(opcao => {
+                const button = document.createElement('button');
+                button.className = 'option-button w-full p-4 text-left bg-white border border-gray-200 rounded-lg hover:bg-gray-50';
+                button.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 hidden"></div>
+                        </div>
+                        <div>
+                            <div class="font-medium">${opcao.valor}</div>
+                            <div class="text-sm text-gray-600">${opcao.texto}</div>
+                        </div>
+                    </div>
+                `;
+                
+                button.onclick = () => selecionarOpcao(opcao.valor, button);
+                
+                // Se já há uma resposta selecionada, marcar
+                if (respostas[perguntaAtual] === opcao.valor) {
+                    button.classList.add('selected');
+                    button.querySelector('.w-3').classList.remove('hidden');
+                }
+                
+                opcoesContainer.appendChild(button);
+            });
+
+            // Atualizar botões de navegação
+            document.getElementById('btn-anterior').disabled = perguntaAtual === 0;
+            
+            if (perguntaAtual === perguntas.length - 1) {
+                document.getElementById('btn-proximo').classList.add('hidden');
+                document.getElementById('btn-finalizar').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-proximo').classList.remove('hidden');
+                document.getElementById('btn-finalizar').classList.add('hidden');
+            }
+
+            // Habilitar/desabilitar botão próximo baseado na resposta
+            atualizarBotaoProximo();
+        }
+
+        function selecionarOpcao(valor, button) {
+            // Remover seleção anterior
+            document.querySelectorAll('.option-button').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.querySelector('.w-3').classList.add('hidden');
+            });
+
+            // Adicionar seleção atual
+            button.classList.add('selected');
+            button.querySelector('.w-3').classList.remove('hidden');
+
+            // Salvar resposta
+            respostas[perguntaAtual] = valor;
+            
+            atualizarBotaoProximo();
+        }
+
+        function atualizarBotaoProximo() {
+            const temResposta = respostas[perguntaAtual] !== null;
+            document.getElementById('btn-proximo').disabled = !temResposta;
+            document.getElementById('btn-finalizar').disabled = !temResposta;
+        }
+
+        function proximaPergunta() {
+            if (perguntaAtual < perguntas.length - 1) {
+                perguntaAtual++;
+                exibirPergunta();
+            }
+        }
+
+        function perguntaAnterior() {
+            if (perguntaAtual > 0) {
+                perguntaAtual--;
+                exibirPergunta();
+            }
+        }
+
+        async function finalizarQuestionario() {
+            // Verificar se todas as perguntas foram respondidas
+            if (respostas.includes(null)) {
+                alert('Por favor, responda todas as perguntas antes de finalizar.');
+                return;
+            }
+
+            // Mostrar loading
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/submeter`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        nome: dadosUsuario.nome,
+                        email: dadosUsuario.email,
+                        respostas: respostas
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    exibirResultado(data.relatorio);
+                } else {
+                    throw new Error(data.erro || 'Erro ao processar respostas');
+                }
+            } catch (error) {
+                console.error('Erro ao submeter questionário:', error);
+                alert('Erro ao processar suas respostas. Tente novamente.');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        function exibirResultado(relatorio) {
+            // Esconder questionário e mostrar resultado
+            document.getElementById('questionario').classList.add('hidden');
+            document.getElementById('resultado').classList.remove('hidden');
+
+            // Configurar badge do nível
+            const nivelBadge = document.getElementById('nivel-badge');
+            const nivelClasses = {
+                'Básico': 'bg-red-500',
+                'Intermediário': 'bg-yellow-500',
+                'Avançado': 'bg-blue-500',
+                'Expert': 'bg-green-500'
+            };
+            nivelBadge.textContent = `Nível ${relatorio.nivel}`;
+            nivelBadge.className = `inline-block px-6 py-3 rounded-full text-xl font-bold text-white mb-4 ${nivelClasses[relatorio.nivel]}`;
+
+            // Descrição
+            document.getElementById('descricao-nivel').textContent = relatorio.descricao;
+
+            // Pontuações
+            document.getElementById('pontuacao-total').textContent = relatorio.pontuacao_total;
+            document.getElementById('percentual-total').textContent = `${relatorio.percentual}%`;
+            
+            document.getElementById('pontuacao-neurociencia').textContent = relatorio.categorias.neurociencia.pontuacao;
+            document.getElementById('percentual-neurociencia').textContent = `${relatorio.categorias.neurociencia.percentual}%`;
+            
+            document.getElementById('pontuacao-psicologia').textContent = relatorio.categorias.psicologia.pontuacao;
+            document.getElementById('percentual-psicologia').textContent = `${relatorio.categorias.psicologia.percentual}%`;
+            
+            document.getElementById('pontuacao-metafisica').textContent = relatorio.categorias.metafisica.pontuacao;
+            document.getElementById('percentual-metafisica').textContent = `${relatorio.categorias.metafisica.percentual}%`;
+
+            // Áreas forte e fraca
+            document.getElementById('area-forte').textContent = relatorio.area_mais_forte;
+            document.getElementById('area-fraca').textContent = relatorio.area_mais_fraca;
+
+            // Sugestões
+            const sugestoesLista = document.getElementById('sugestoes-lista');
+            sugestoesLista.innerHTML = '';
+            relatorio.sugestoes.forEach(sugestao => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${sugestao}`;
+                sugestoesLista.appendChild(li);
+            });
+        }
+
+        function reiniciarQuestionario() {
+            // Resetar variáveis
+            respostas = new Array(perguntas.length).fill(null);
+            perguntaAtual = 0;
+            dadosUsuario = {};
+
+            // Limpar formulário
+            document.getElementById('nome').value = '';
+            document.getElementById('email').value = '';
+
+            // Mostrar formulário inicial
+            document.getElementById('resultado').classList.add('hidden');
+            document.getElementById('form-inicial').classList.remove('hidden');
+        }
+
+        function compartilharResultado() {
+            const texto = `Acabei de fazer o Questionário de Inteligência Emocional e meu nível é ${document.getElementById('nivel-badge').textContent}! 🧠💙`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Meu Resultado - Questionário de Inteligência Emocional',
+                    text: texto,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback para copiar para clipboard
+                navigator.clipboard.writeText(texto + ' ' + window.location.href).then(() => {
+                    alert('Resultado copiado para a área de transferência!');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
