@@ -7,19 +7,14 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from src.models.questionario import db
 from src.routes.questionario import questionario_bp
-from src.routes.admin import admin_bp
 
-app = Flask(__name__, 
-	static_folder=os.path.join(os.path.dirname(__file__), 'static'),
- 	template_folder=os.path.join(os.path.dirname(__file__), 'templates')
-)
+app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
 
 # Habilitar CORS para todas as rotas
 CORS(app)
 
 app.register_blueprint(questionario_bp, url_prefix='/api')
-app.register_blueprint(admin_bp)
 
 # uncomment if you need to use database
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
@@ -44,6 +39,6 @@ def serve(path):
         else:
             return "index.html not found", 404
 
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
